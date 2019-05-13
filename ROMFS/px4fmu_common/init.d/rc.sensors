@@ -1,4 +1,4 @@
-#!nsh
+#!/bin/sh
 #
 # Standard startup script for sensor drivers.
 #
@@ -104,9 +104,6 @@ if param greater SENS_EN_TRANGER 0
 then
 	teraranger start -a
 fi
-
-# ICM20948 as external magnetometer on I2C (e.g. Here GPS)
-mpu9250 -X -M -R 6 start
 
 ###############################################################################
 #                            End Optional drivers                             #

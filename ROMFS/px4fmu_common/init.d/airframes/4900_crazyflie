@@ -1,4 +1,4 @@
-#!nsh
+#!/bin/sh
 #
 # @name Crazyflie 2
 #
@@ -69,8 +69,6 @@ then
 	param set SDLOG_PROFILE 1
 
 	param set SENS_FLOW_MINRNG 0.05
-
-	param set SYS_FMU_TASK 1
 
 fi
 

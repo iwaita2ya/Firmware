@@ -38,6 +38,7 @@ px4_add_romfs_files(
 	1000_rc_fw_easystar.hil
 	1001_rc_quad_x.hil
 	1002_standard_vtol.hil
+	1100_rc_quad_x_sih.hil
 	
 	# [2000, 2999] Standard planes"
 	2100_standard_plane
@@ -72,8 +73,10 @@ px4_add_romfs_files(
 	4030_3dr_solo
 	4031_3dr_quad
 	4040_reaper
+	4041_beta75x
 	4050_generic_250
 	4051_s250aq
+	4052_holybro_qav250
 	4060_dji_matrice_100
 	4070_aerofc
 	4080_zmr250

@@ -15,9 +15,10 @@ px4_add_board(
 		gps
 		#imu # all available imu drivers
 		#magnetometer # all available magnetometer drivers
-		#protocol_splitter
 		pwm_out_sim
 		#telemetry # all available telemetry drivers
+		sim/tone_alarm
+		tone_alarm
 		#uavcan
 
 	MODULES
@@ -41,7 +42,6 @@ px4_add_board(
 		mc_pos_control
 		micrortps_bridge
 		navigator
-		position_estimator_inav
 		replay
 		sensors
 		simulator
@@ -79,8 +79,9 @@ px4_add_board(
 		fixedwing_control # Tutorial code from https://px4.io/dev/example_fixedwing_control
 		hello
 		#hwtest # Hardware test
-		px4_mavlink_debug # Tutorial code from https://px4.io/dev/debug_values
-		px4_simple_app # Tutorial code from https://px4.io/dev/px4_simple_app
+		position_estimator_inav
+		px4_mavlink_debug # Tutorial code from http://dev.px4.io/en/debug/debug_values.html
+		px4_simple_app # Tutorial code from http://dev.px4.io/en/apps/hello_sky.html
 		rover_steering_control # Rover example app
 		segway
 	)
@@ -97,4 +98,9 @@ set(REPLAY_FILE "$ENV{replay}")
 if(REPLAY_FILE)
 	message("Building with uorb publisher rules support")
 	add_definitions(-DORB_USE_PUBLISHER_RULES)
+
+	message("Building without lockstep for replay")
+	set(ENABLE_LOCKSTEP_SCHEDULER no)
+else()
+	set(ENABLE_LOCKSTEP_SCHEDULER yes)
 endif()

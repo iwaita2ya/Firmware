@@ -1,6 +1,6 @@
 ############################################################################
 #
-# Copyright (c) 2017 PX4 Development Team. All rights reserved.
+# Copyright (c) 2017 - 2019 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -147,7 +147,7 @@ if(NOT PX4_CONFIG_FILE)
 		"boards/*.cmake"
 		)
 
-	set(PX4_CONFIGS ${board_configs} CACHE STRINGS "PX4 board configs" FORCE)
+	set(PX4_CONFIGS ${board_configs} CACHE STRING "PX4 board configs" FORCE)
 
 	foreach(filename ${board_configs})
 		# parse input CONFIG into components to match with existing in tree configs
@@ -216,6 +216,13 @@ include(${PX4_CONFIG_FILE})
 message(STATUS "PX4 config: ${PX4_CONFIG}")
 message(STATUS "PX4 platform: ${PX4_PLATFORM}")
 
+if (ENABLE_LOCKSTEP_SCHEDULER)
+	add_definitions(-DENABLE_LOCKSTEP_SCHEDULER)
+	message(STATUS "PX4 lockstep: enabled")
+else()
+	message(STATUS "PX4 lockstep: disabled")
+endif()
+
 # external modules
 set(EXTERNAL_MODULES_LOCATION "" CACHE STRING "External modules source location")
 
@@ -227,6 +234,10 @@ set_property(GLOBAL PROPERTY PX4_MODULE_CONFIG_FILES)
 
 include(platforms/${PX4_PLATFORM}/cmake/px4_impl_os.cmake)
 list(APPEND CMAKE_MODULE_PATH ${PX4_SOURCE_DIR}/platforms/${PX4_PLATFORM}/cmake)
+
+if(EXISTS "${PX4_SOURCE_DIR}/platforms/${PX4_PLATFORM}/cmake/init.cmake")
+	include(init)
+endif()
 
 # CMake build type (Debug Release RelWithDebInfo MinSizeRel Coverage)
 if (NOT CMAKE_BUILD_TYPE)
@@ -288,10 +299,6 @@ if (${PX4_PLATFORM} STREQUAL "posix")
 	if (NOT CMAKE_INSTALL_PREFIX)
 		set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
 	endif()
-
-	# cmake testing only on posix
-	enable_testing()
-	include(CTest)
 endif()
 
 #=============================================================================
@@ -403,6 +410,37 @@ if (NOT EXTERNAL_MODULES_LOCATION STREQUAL "")
 endif()
 
 #=============================================================================
+# Testing - Automatic unit and integration testing with CTest
+#
+
+# optionally enable cmake testing (supported only on posix)
+option(CMAKE_TESTING "Configure test targets" OFF)
+if(CMAKE_TESTING)
+	include(CTest) # sets BUILD_TESTING variable
+endif()
+
+# enable test filtering to run only specific tests with the ctest -R regex functionality
+set(TESTFILTER "" CACHE STRING "Filter string for ctest to selectively only run specific tests (ctest -R)")
+
+# if testing is enabled download and configure gtest
+list(APPEND CMAKE_MODULE_PATH ${PX4_SOURCE_DIR}/cmake/gtest/)
+include(px4_add_gtest)
+if(BUILD_TESTING)
+	include(gtest)
+endif()
+
+add_custom_target(test_results
+		COMMAND GTEST_COLOR=1 ${CMAKE_CTEST_COMMAND} --output-on-failure -T Test -R ${TESTFILTER} USES_TERMINAL
+		DEPENDS
+			px4
+			examples__dyn_hello
+			test_mixer_multirotor
+		USES_TERMINAL
+		COMMENT "Running tests"
+		WORKING_DIRECTORY ${PX4_BINARY_DIR})
+set_target_properties(test_results PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+#=============================================================================
 # subdirectories
 #
 add_library(parameters_interface INTERFACE)
@@ -410,8 +448,7 @@ add_library(parameters_interface INTERFACE)
 include(px4_add_library)
 add_subdirectory(src/lib EXCLUDE_FROM_ALL)
 
-add_subdirectory(src/platforms/common EXCLUDE_FROM_ALL)
-add_subdirectory(src/modules/systemlib EXCLUDE_FROM_ALL) # TODO: split into libraries in platform layer
+add_subdirectory(src/platforms EXCLUDE_FROM_ALL)
 add_subdirectory(src/modules/uORB EXCLUDE_FROM_ALL) # TODO: platform layer
 add_subdirectory(src/drivers/boards EXCLUDE_FROM_ALL)
 
